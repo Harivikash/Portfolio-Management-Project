@@ -82,9 +82,4 @@ Side| Symbol| Name| Order Price| Order Qty| Order| Amount| Filled| Markets| Curr
 * Integrating with other financial data sources for better reliability.
 * Providing user authentication for a more personalized experience.
 
----
 
-# Portfolio-Management-Project
-=======
-# Portfolio-Management-Project
->>>>>>> 0320438aa64d3f8ec735205d79de37418544cf06
