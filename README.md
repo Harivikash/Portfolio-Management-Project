@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Portfolio Management Project
 
 This is a portfolio management application that allows users to track their investments in various financial instruments. The application fetches real-time data from Yahoo Finance and calculates the unrealized profit for each investment in the portfolio.
@@ -85,3 +86,6 @@ Side| Symbol| Name| Order Price| Order Qty| Order| Amount| Filled| Markets| Curr
 ---
 
 # Portfolio-Management-Project
+=======
+# Portfolio-Management-Project
+>>>>>>> 0320438aa64d3f8ec735205d79de37418544cf06
