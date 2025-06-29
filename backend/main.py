@@ -6,7 +6,7 @@ from database import SessionLocal, engine
 import models
 from db_utils import records_to_df
 from portfolio_utils import calculate_portfolio_summary 
-from portfolio_utils import get_latest_prices
+from portfolio_utils import get_latest_prices, get_quote_types
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -53,17 +53,17 @@ def portfolio_summary(db: Session = Depends(get_db)):
 
     df = records_to_df(records)
 
-    # Calculate your portfolio summary stats (already done)
     summary = calculate_portfolio_summary(df)
 
-    # Add holdings percentages for Pie Chart
     df['Side'] = df['Side'].str.lower()
     df['Quantity'] = df.apply(lambda row: row['Fill Qty'] if row['Side'] == 'buy' else -row['Fill Qty'], axis=1)
 
-    # Add current prices if needed
     symbols = df['Symbol'].unique().tolist()
     prices = get_latest_prices(symbols)
+    quote_types = get_quote_types(symbols)   # ✅ NEW
+
     df['Current Price'] = df['Symbol'].map(prices)
+    df['Quote Type'] = df['Symbol'].map(quote_types)  # ✅ NEW
 
     df['Current Value'] = df['Quantity'] * df['Current Price']
     total_value = df['Current Value'].sum()
@@ -81,6 +81,13 @@ def portfolio_summary(db: Session = Depends(get_db)):
 
     summary['holdings_percentages'] = percentages
 
+    # ✅ Add the split for Pie chart:
+    quote_split = (
+        df.groupby('Quote Type')['Current Value'].sum().to_dict()
+        if total_value != 0 else {}
+    )
+    summary['quote_type_split'] = quote_split
+
     return summary
 
 
@@ -95,6 +102,7 @@ def portfolio_data_json(db: Session = Depends(get_db)):
 
     symbols = df['Symbol'].unique().tolist()
     prices = get_latest_prices(symbols)
+    quote_types = get_quote_types(symbols)
 
     def calc_unrealized(row):
         side = row['Side'].lower()
@@ -104,10 +112,11 @@ def portfolio_data_json(db: Session = Depends(get_db)):
 
     df['Current Price'] = df['Symbol'].map(prices)
     df['Unrealized Profit'] = df.apply(calc_unrealized, axis=1)
+    df['Quote Type'] = df['Symbol'].map(quote_types)   # ✅ Add this column!
 
     summary = calculate_portfolio_summary(df)
 
-    # ✅ Convert Timestamp/date columns to string
+    # Convert Timestamp/date columns to string
     for col in df.select_dtypes(include=['datetime64[ns]', 'datetime64[ns, UTC]']).columns:
         df[col] = df[col].astype(str)
 

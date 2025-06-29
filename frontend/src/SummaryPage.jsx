@@ -21,6 +21,7 @@ export default function SummaryPage() {
     '#00a8e8', '#0077b6', '#0096c7', '#48cae4', '#90e0ef',
   ];
 
+  // 1) Holdings Allocation Chart
   const chartData = {
     labels: summary.holdings_percentages.map(item => item.Symbol),
     datasets: [{
@@ -30,32 +31,60 @@ export default function SummaryPage() {
     }],
   };
 
-const chartOptions = {
-  plugins: {
-    legend: {
-      position: 'bottom',
-      labels: {
-        boxWidth: 20,
-      },
-    },
-    tooltip: {
-      callbacks: {
-        label: function (context) {
-          const symbol = context.label;
-          const percent = context.parsed.toFixed(2);
-          const index = context.dataIndex;
-          const currentValue = summary.holdings_percentages[index]['Current Value'];
+  //  2) Holdings by Type (ETF vs Stocks)
+  const quoteTypeColors = ['#4e73df', '#1cc88a', '#f6c23e', '#e74a3b'];
+  const quoteTypeChartData = {
+    labels: Object.keys(summary.quote_type_split || {}),
+    datasets: [{
+      data: Object.values(summary.quote_type_split || {}),
+      backgroundColor: quoteTypeColors.slice(0, Object.keys(summary.quote_type_split || {}).length),
+      borderWidth: 1,
+    }],
+  };
 
-          return `${symbol}: ${percent}% ($${currentValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })})`;
+  const chartOptions = {
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 20 } },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const symbol = context.label;
+            const percent = context.parsed.toFixed(2);
+            const index = context.dataIndex;
+            const currentValue = summary.holdings_percentages[index]?.['Current Value'];
+            if (currentValue !== undefined) {
+              return `${symbol}: ${percent}% ($${currentValue.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })})`;
+            }
+            return `${symbol}: ${percent}%`;
+          },
         },
       },
     },
-  },
-  
-};
+  };
 
+  // ✅ Separate options for quote type pie chart
+  const quoteTypeChartOptions = {
+    plugins: {
+      legend: { position: 'bottom', labels: { boxWidth: 20 } },
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const value = context.parsed;
+            const total = context.chart._metasets[0].total;
+            const percent = total > 0 ? (value / total * 100).toFixed(2) : '0.00';
+            return `${context.label}: ${percent}% ($${value.toLocaleString(undefined, {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })})`;
+          },
+        },
+      },
+    },
+  };
 
-  // Format numbers nicely
   const formatNumber = (num) => {
     if (typeof num === 'number') {
       return num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -67,6 +96,7 @@ const chartOptions = {
     <div className="container">
       <h1 className="mb-4 text-center">📊 Portfolio Summary</h1>
       <div className="row">
+        {/* Chart 1: Holdings Allocation */}
         <div className="col-lg-6 mb-4">
           <div className="card shadow">
             <div className="card-body">
@@ -76,13 +106,24 @@ const chartOptions = {
           </div>
         </div>
 
+        {/*  Chart 2: Holdings by Type */}
         <div className="col-lg-6 mb-4">
+          <div className="card shadow">
+            <div className="card-body">
+              <h5 className="card-title">Holdings by Type</h5>
+              <Pie data={quoteTypeChartData} options={quoteTypeChartOptions} />
+            </div>
+          </div>
+        </div>
+
+        {/* Key Metrics */}
+        <div className="col-lg-12 mb-4">
           <div className="card shadow">
             <div className="card-body">
               <h5 className="card-title">Key Metrics</h5>
               <ul className="list-group list-group-flush">
                 {Object.entries(summary).map(([key, value]) => {
-                  if (key === 'holdings_percentages') return null;
+                  if (['holdings_percentages', 'quote_type_split'].includes(key)) return null;
                   return (
                     <li key={key} className="list-group-item d-flex justify-content-between align-items-center">
                       {key.replace(/_/g, ' ').toUpperCase()}
@@ -98,6 +139,7 @@ const chartOptions = {
         </div>
       </div>
 
+      {/* Holdings Table */}
       <div className="card shadow mt-4">
         <div className="card-body">
           <h5 className="card-title">Holdings Breakdown</h5>

@@ -4,6 +4,7 @@ from datetime import datetime
 
 import numpy as np
 from sklearn.datasets import load_iris
+import yfinance as yf
 
 # Loading irirs dataset
 data = load_iris()
@@ -112,3 +113,11 @@ def xirr(cashflows, guess=0.1):
             return new_rate
         rate = new_rate
     return None
+
+def get_quote_types(symbols):
+    result = {}
+    for sym in symbols:
+        ticker = yf.Ticker(sym)
+        info = ticker.info
+        result[sym] = info.get("quoteType", "UNKNOWN")
+    return result
