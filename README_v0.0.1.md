@@ -40,7 +40,12 @@ pip install -r requirements.txt
 ### 3. Run the Application
 
 After the dependencies are installed, you can start the FastAPI server.
+```bash
+npm run dev
+```
+to start the React frontend server.
 
+The backend server can be started with the following command:
 ```bash
 uvicorn main:app --reload
 ```
